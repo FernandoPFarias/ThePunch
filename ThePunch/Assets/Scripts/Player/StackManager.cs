@@ -20,8 +20,13 @@ public class StackManager : MonoBehaviour
     public Vector3 stackedScale = Vector3.one; // Escala dos empilhados
 
     [Header("Inércia da Pilha")]
-    public float spring = 0.15f; // Quanto menor, mais elástico
+    public float lerpSpeed = 8f; // Ajuste para mais ou menos balanço
     public float damping = 0.8f; // (Reservado para uso futuro, se quiser amortecer mais)
+
+    [Header("Dinheiro")]
+    public int money = 0;
+    public int moneyPerEnemy = 10;
+    public System.Action<int> OnMoneyChanged;
 
     private List<GameObject> stackedPrefabs = new List<GameObject>();
     private List<Vector3> targetPositions = new List<Vector3>();
@@ -31,40 +36,44 @@ public class StackManager : MonoBehaviour
     {
         // Empilhamento automático de inimigos derrotados
         Collider[] hits = Physics.OverlapSphere(stackOrigin.position, pickupRange, enemyLayer);
-        Debug.Log($"[StackManager] Detectados {hits.Length} inimigos no range de pickup.");
         foreach (var hit in hits)
         {
             var stackable = hit.GetComponentInParent<StackableCharacter>();
             var enemyController = hit.GetComponentInParent<EnemyController>();
-            Debug.Log($"[StackManager] Checando: {hit.name} | Stackable: {stackable != null} | Ragdoll: {(enemyController != null && enemyController.IsRagdollActive())} | isStacked: {(stackable != null ? stackable.isStacked.ToString() : "-")}");
             if (stackable != null && enemyController != null && enemyController.IsRagdollActive() && !stackable.isStacked && stackable.canBeCollected)
             {
-                Debug.Log($"[StackManager] Empilhando: {hit.name}");
                 AddToStack(stackable.transform);
                 stackable.isStacked = true;
             }
         }
-        // Efeito de inércia tipo SmoothDamp
-        while (velocities.Count < stackedPrefabs.Count)
-            velocities.Add(Vector3.zero);
-        while (velocities.Count > stackedPrefabs.Count)
-            velocities.RemoveAt(velocities.Count - 1);
+        // Efeito de corrente/rabo de lagartixa com Lerp
         Vector3 dir = stackDirection.normalized;
         Vector3 anchor = stackOrigin.position;
-        for (int i = 0; i < stackedPrefabs.Count; i++)
+        // Primeiro objeto: fixo no anchor
+        if (stackedPrefabs.Count > 0)
         {
-            Vector3 targetPos = stackOrigin.position + stackDirection.normalized * stackSpacing * i + Vector3.up * stackYOffset;
-            Vector3 velocity = velocities[i];
-            stackedPrefabs[i].transform.position = Vector3.SmoothDamp(
+            stackedPrefabs[0].transform.position = stackOrigin.position + dir * stackSpacing + Vector3.up * stackYOffset;
+            stackedPrefabs[0].transform.rotation = Quaternion.Euler(90, 0, 0);
+            stackedPrefabs[0].transform.localScale = stackedScale;
+        }
+
+        // Demais objetos: seguem o anterior, topo balança mais
+        for (int i = 1; i < stackedPrefabs.Count; i++)
+        {
+            float t = (float)i / (stackedPrefabs.Count - 1);
+            float lerp = Mathf.Lerp(lerpSpeed, lerpSpeed * 2f, t); // O topo balança mais
+
+            Vector3 targetPos = stackedPrefabs[i - 1].transform.position + dir * stackSpacing + Vector3.up * stackYOffset;
+
+            // (Opcional) Para o último objeto, pode adicionar offset extra de inércia aqui
+            // if (i == stackedPrefabs.Count - 1) { ... }
+
+            stackedPrefabs[i].transform.position = Vector3.Lerp(
                 stackedPrefabs[i].transform.position,
                 targetPos,
-                ref velocity,
-                spring,
-                Mathf.Infinity,
-                Time.deltaTime
+                Time.deltaTime * lerp
             );
-            velocities[i] = velocity;
-            stackedPrefabs[i].transform.rotation = Quaternion.LookRotation(stackDirection.normalized);
+            stackedPrefabs[i].transform.rotation = Quaternion.Euler(90, 0, 0);
             stackedPrefabs[i].transform.localScale = stackedScale;
         }
     }
@@ -114,4 +123,16 @@ public class StackManager : MonoBehaviour
     }
 
     public int StackCount => stackedPrefabs.Count;
+
+    public void SellStack()
+    {
+        int sold = stackedPrefabs.Count;
+        foreach (var obj in stackedPrefabs)
+        {
+            Destroy(obj);
+        }
+        stackedPrefabs.Clear();
+        money += sold * moneyPerEnemy;
+        OnMoneyChanged?.Invoke(money);
+    }
 } 
