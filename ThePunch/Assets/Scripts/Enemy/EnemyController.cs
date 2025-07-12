@@ -28,7 +28,12 @@ public class EnemyController : MonoBehaviour
             rootRigidbody = GetComponent<Rigidbody>();
         if (simplePatrol == null)
             simplePatrol = GetComponent<SimplePatrol>();
+        // NÃO desative o Character Controller aqui!
+        // Mantenha o Character Controller ativo até ativar o ragdoll
+        // SetRagdoll(false) agora só desativa ragdollColliders
         SetRagdoll(false);
+        if (characterController != null)
+            characterController.enabled = true;
     }
 
     public void SetRagdoll(bool active)
@@ -48,6 +53,12 @@ public class EnemyController : MonoBehaviour
                 rb.constraints = RigidbodyConstraints.None;
             }
         }
+        // Garante que os colliders do ragdoll estejam habilitados e não triggers ao ativar
+        foreach (var col in ragdollColliders)
+        {
+            col.enabled = active;
+            if (active && col.isTrigger) col.isTrigger = false;
+        }
         if (animator != null)
             animator.enabled = !active;
         // Desativa movimentação do root ao ativar ragdoll
@@ -62,33 +73,65 @@ public class EnemyController : MonoBehaviour
             if (simplePatrol != null)
                 simplePatrol.SetActive(false);
         }
+        else
+        {
+            // Ao desativar ragdoll, reativa o Character Controller
+            if (characterController != null)
+                characterController.enabled = true;
+        }
     }
 
     public void ActivateRagdoll(GameObject player = null)
     {
-        SetRagdoll(true);
         if (player != null)
-            StartCoroutine(IgnorePlayerCollision(player, 1.5f)); // ignora por 1.5 segundos
+            IgnorePlayerCollisionImmediate(player, true); // Ignora colisão antes de ativar ragdoll
+        if (characterController != null)
+            characterController.enabled = false;
+        StartCoroutine(ActivateRagdollDelayed(player));
+        // Permite coleta após delay
+        var stackable = GetComponent<StackableCharacter>();
+        if (stackable != null)
+            StartCoroutine(EnableCollectAfterDelay(stackable));
     }
 
-    private IEnumerator IgnorePlayerCollision(GameObject player, float duration)
+    private IEnumerator ActivateRagdollDelayed(GameObject player)
+    {
+        yield return new WaitForFixedUpdate(); // Espera um frame de física
+        SetRagdoll(true);
+        if (player != null)
+            StartCoroutine(RestorePlayerCollisionAfterDelay(player, 1.5f));
+    }
+
+    private IEnumerator EnableCollectAfterDelay(StackableCharacter stackable)
+    {
+        stackable.canBeCollected = false;
+        yield return new WaitForSeconds(stackable.collectDelay);
+        stackable.canBeCollected = true;
+    }
+
+    // Ignora colisão imediatamente
+    private void IgnorePlayerCollisionImmediate(GameObject player, bool ignore)
     {
         var playerColliders = player.GetComponentsInChildren<Collider>();
         foreach (var ragdollCol in ragdollColliders)
         {
             foreach (var playerCol in playerColliders)
             {
-                Physics.IgnoreCollision(ragdollCol, playerCol, true);
+                Physics.IgnoreCollision(ragdollCol, playerCol, ignore);
             }
         }
+    }
+
+    // Restaura colisão após um tempo
+    private IEnumerator RestorePlayerCollisionAfterDelay(GameObject player, float duration)
+    {
         yield return new WaitForSeconds(duration);
-        foreach (var ragdollCol in ragdollColliders)
-        {
-            foreach (var playerCol in playerColliders)
-            {
-                Physics.IgnoreCollision(ragdollCol, playerCol, false);
-            }
-        }
+        IgnorePlayerCollisionImmediate(player, false);
+    }
+
+    public bool IsRagdollActive()
+    {
+        return animator != null && !animator.enabled;
     }
 
     void LateUpdate()
@@ -97,6 +140,7 @@ public class EnemyController : MonoBehaviour
         {
             // Sincroniza o root com o hips enquanto o ragdoll está ativo
             transform.position = hips.position;
+            transform.rotation = hips.rotation;
         }
     }
 } 

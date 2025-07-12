@@ -71,6 +71,7 @@ public class PlayerController : MonoBehaviour
         if (characterController == null) return;
 
         Vector2 input = moveInput;
+        // Prioriza joystick virtual apenas se estiver ativo, senão usa teclado/controle
         if (virtualJoystick != null && virtualJoystick.IsActive)
         {
             input = virtualJoystick.Direction();
@@ -91,14 +92,29 @@ public class PlayerController : MonoBehaviour
         {
             animator.SetFloat("F_Speed", move.magnitude);
         }
-        // (Removido: soco automático por OverlapSphere/punchRange)
+
+        // --- SOCAR AUTOMATICAMENTE INIMIGOS PRÓXIMOS ---
+        if (Time.time - lastPunchTime > punchCooldown)
+        {
+            Collider[] hits = Physics.OverlapSphere(transform.position, punchRange, enemyLayer);
+            if (hits.Length > 0)
+            {
+                // Aciona animação de soco (deve ter um trigger "Punch" no Animator)
+                if (animator != null)
+                {
+                    animator.SetTrigger("T_Punch");
+                }
+                lastPunchTime = Time.time;
+            }
+        }
     }
 
     // Visualização do alcance do soco no editor
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, punchRange);
+        Gizmos.DrawWireSphere(transform.position, punchRange);  
+    
     }
 
     // Métodos para Animation Events
