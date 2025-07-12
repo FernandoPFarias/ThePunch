@@ -1,2 +1,48 @@
-ThePunch/Library/PackageCache/com.unity.burst@59eb6f11d242/.Runtime/libburst-llvm-18.dylib
-ThePunch/Library/PackageCache/com.unity.burst@59eb6f11d242/.Runtime/libburst-llvm-19.dylib
+# Este arquivo informa ao Git quais arquivos e pastas ignorar em um projeto Unity.
+
+# Pastas geradas pelo Unity que devem ser ignoradas.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Arquivos de Build
+*.apk
+*.aab
+*.unitypackage
+
+# Pastas de profiling e crash reports
+/[Mm]emoryCaptures/
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+/[Pp]rofilerAUM/
+
+# Arquivos de IDEs (Visual Studio, Rider, etc.)
+ExportedObj/
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Arquivos de sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
