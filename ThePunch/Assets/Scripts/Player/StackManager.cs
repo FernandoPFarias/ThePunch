@@ -23,14 +23,31 @@ public class StackManager : MonoBehaviour
     public float lerpSpeed = 8f; // Ajuste para mais ou menos balanço
     public float damping = 0.8f; // (Reservado para uso futuro, se quiser amortecer mais)
 
+    [Header("Capacidade da Pilha")]
+    public int maxStack = 5;
+    public System.Action<int> OnStackChanged;
+
     [Header("Dinheiro")]
     public int money = 0;
     public int moneyPerEnemy = 10;
     public System.Action<int> OnMoneyChanged;
 
+    [Header("UI Barra de Capacidade")]
+    public CapacityBarUI capacityBarUI; // Arraste no Inspector
+    public int maxPossibleCapacity = 8; // Capacidade máxima possível (opcional)
+
     private List<GameObject> stackedPrefabs = new List<GameObject>();
     private List<Vector3> targetPositions = new List<Vector3>();
     private List<Vector3> velocities = new List<Vector3>();
+
+    void Start()
+    {
+        UpdateCapacityBar();
+        if (OnStackChanged != null)
+            OnStackChanged += _ => UpdateCapacityBar();
+        else
+            OnStackChanged = _ => UpdateCapacityBar();
+    }
 
     void Update()
     {
@@ -91,8 +108,19 @@ public class StackManager : MonoBehaviour
         }
     }
 
+    public void UpdateCapacityBar()
+    {
+        if (capacityBarUI != null)
+        {
+            capacityBarUI.SetCapacity(maxStack, maxPossibleCapacity);
+            capacityBarUI.SetLoad(stackedPrefabs.Count);
+        }
+    }
+
     public void AddToStack(Transform enemy)
     {
+        if (stackedPrefabs.Count >= maxStack)
+            return;
         // Instancia o prefab na posição da pilha
         if (stackedEnemyPrefab != null)
         {
@@ -120,6 +148,8 @@ public class StackManager : MonoBehaviour
         }
         // Desativa ou destrói o inimigo original
         enemy.gameObject.SetActive(false);
+        OnStackChanged?.Invoke(stackedPrefabs.Count);
+        UpdateCapacityBar();
     }
 
     public int StackCount => stackedPrefabs.Count;
@@ -134,5 +164,7 @@ public class StackManager : MonoBehaviour
         stackedPrefabs.Clear();
         money += sold * moneyPerEnemy;
         OnMoneyChanged?.Invoke(money);
+        OnStackChanged?.Invoke(stackedPrefabs.Count);
+        UpdateCapacityBar();
     }
 } 

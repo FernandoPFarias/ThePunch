@@ -1,0 +1,5 @@
+D:/Projetos unity/Meus/ThePunch/ThePunch/.utmp/RelWithDebInfo/3y1y4940/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Projetos unity/Meus/ThePunch/ThePunch/.utmp/RelWithDebInfo/3y1y4940/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+D:/Projetos unity/Meus/ThePunch/ThePunch/.utmp/RelWithDebInfo/3y1y4940/armeabi-v7a/GameActivity/CMakeFiles/game.dir
+D:/Projetos unity/Meus/ThePunch/ThePunch/.utmp/RelWithDebInfo/3y1y4940/armeabi-v7a/GameActivity/CMakeFiles/edit_cache.dir
+D:/Projetos unity/Meus/ThePunch/ThePunch/.utmp/RelWithDebInfo/3y1y4940/armeabi-v7a/GameActivity/CMakeFiles/rebuild_cache.dir

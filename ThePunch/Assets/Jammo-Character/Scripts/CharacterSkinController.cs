@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CharacterSkinController : MonoBehaviour
 {
@@ -13,38 +14,52 @@ public class CharacterSkinController : MonoBehaviour
     public enum EyePosition { normal, happy, angry, dead}
     public EyePosition eyeState;
 
-    // Start is called before the first frame update
+    // Novo Input System
+    public InputAction key1Action;
+    public InputAction key2Action;
+    public InputAction key3Action;
+    public InputAction key4Action;
+
+    void OnEnable()
+    {
+        key1Action.Enable();
+        key2Action.Enable();
+        key3Action.Enable();
+        key4Action.Enable();
+    }
+    void OnDisable()
+    {
+        key1Action.Disable();
+        key2Action.Disable();
+        key3Action.Disable();
+        key4Action.Disable();
+    }
+
     void Start()
     {
         animator = GetComponent<Animator>();
         characterMaterials = GetComponentsInChildren<Renderer>();
-        
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (key1Action.triggered)
         {
-            //ChangeMaterialSettings(0);
             ChangeEyeOffset(EyePosition.normal);
             ChangeAnimatorIdle("normal");
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (key2Action.triggered)
         {
-            //ChangeMaterialSettings(1);
             ChangeEyeOffset(EyePosition.angry);
             ChangeAnimatorIdle("angry");
         }
-        if (Input.GetKeyDown(KeyCode.Alpha3))
+        if (key3Action.triggered)
         {
-            //ChangeMaterialSettings(2);
             ChangeEyeOffset(EyePosition.happy);
             ChangeAnimatorIdle("happy");
         }
-        if (Input.GetKeyDown(KeyCode.Alpha4))
+        if (key4Action.triggered)
         {
-            //ChangeMaterialSettings(3);
             ChangeEyeOffset(EyePosition.dead);
             ChangeAnimatorIdle("dead");
         }
