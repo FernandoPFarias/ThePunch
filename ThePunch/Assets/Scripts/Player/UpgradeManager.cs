@@ -55,6 +55,8 @@ public class UpgradeManager : MonoBehaviour
             stackManager.money -= level.upgradeCost;
             ApplyUpgrade(level);
             currentLevel++;
+            if (MusicManager.Instance != null && MusicManager.Instance.upgradeClip != null)
+                MusicManager.Instance.PlaySFX(MusicManager.Instance.upgradeClip);
             stackManager.OnMoneyChanged?.Invoke(stackManager.money);
             UpdateUI();
             stackManager.UpdateCapacityBar();

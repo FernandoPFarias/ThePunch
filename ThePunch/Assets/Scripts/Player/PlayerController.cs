@@ -22,6 +22,11 @@ public class PlayerController : MonoBehaviour
     private CharacterController characterController;
     private PlayerInput playerInput;
     private Animator animator;
+    private float punchCheckTimer = 0f;
+    private float punchCheckInterval = 0.1f;
+    private bool wasMoving = false;
+    private float stepTimer = 0f;
+    private float stepInterval = 0.4f; // ajuste conforme o ritmo do passo
 
     private void Awake()
     {
@@ -77,7 +82,7 @@ public class PlayerController : MonoBehaviour
             input = virtualJoystick.Direction();
         }
 
-        Vector3 move = new Vector3(input.x, 0, input.y);
+        Vector3 move = new Vector3(-input.x, 0, -input.y);
         characterController.Move(move * moveSpeed * Time.deltaTime);
 
         // Rotaciona o player na direção do movimento, se houver movimento
@@ -93,17 +98,37 @@ public class PlayerController : MonoBehaviour
             animator.SetFloat("F_Speed", move.magnitude);
         }
 
-        // --- SOCAR AUTOMATICAMENTE INIMIGOS PRÓXIMOS ---
-        if (Time.time - lastPunchTime > punchCooldown)
+        // --- PASSOS DO PLAYER ---
+        bool isMoving = move.sqrMagnitude > 0.01f;
+        if (isMoving)
         {
+            stepTimer += Time.deltaTime;
+            if (stepTimer >= stepInterval)
+            {
+                stepTimer = 0f;
+                if (MusicManager.Instance != null && MusicManager.Instance.stepClip != null)
+                    MusicManager.Instance.PlaySFX(MusicManager.Instance.stepClip);
+            }
+        }
+        else
+        {
+            stepTimer = stepInterval; // reinicia para tocar imediatamente ao voltar a andar
+        }
+        wasMoving = isMoving;
+
+        // --- SOCAR AUTOMATICAMENTE INIMIGOS PRÓXIMOS ---
+        punchCheckTimer += Time.deltaTime;
+        if (punchCheckTimer >= punchCheckInterval && Time.time - lastPunchTime > punchCooldown)
+        {
+            punchCheckTimer = 0f;
             Collider[] hits = Physics.OverlapSphere(transform.position, punchRange, enemyLayer);
             if (hits.Length > 0)
             {
-                // Aciona animação de soco (deve ter um trigger "Punch" no Animator)
                 if (animator != null)
                 {
                     animator.SetTrigger("T_Punch");
                 }
+                // Removido: som do soco aqui, agora só pelo Animation Event
                 lastPunchTime = Time.time;
             }
         }
@@ -128,5 +153,11 @@ public class PlayerController : MonoBehaviour
     {
         if (punchHitbox != null)
             punchHitbox.DeactivateHitbox();
+    }
+
+    public void PlayPunchSound()
+    {
+        if (MusicManager.Instance != null && MusicManager.Instance.punchClip != null)
+            MusicManager.Instance.PlaySFX(MusicManager.Instance.punchClip);
     }
 } 

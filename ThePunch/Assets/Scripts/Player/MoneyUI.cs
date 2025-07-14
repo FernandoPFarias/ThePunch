@@ -24,6 +24,6 @@ public class MoneyUI : MonoBehaviour
     void UpdateMoney(int value)
     {
         if (moneyText != null)
-            moneyText.text = "$" + value;
+            moneyText.text = "" + value;
     }
 } 

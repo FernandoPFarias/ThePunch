@@ -13,6 +13,7 @@ public class EnemyController : MonoBehaviour
     public SimplePatrol simplePatrol;
     private int originalLayer;
     private const string ragdollLayerName = "RagdollDead";
+    public System.Action OnEnemyRemoved;
 
     void Awake()
     {
@@ -155,6 +156,12 @@ public class EnemyController : MonoBehaviour
     public bool IsRagdollActive()
     {
         return animator != null && !animator.enabled;
+    }
+
+    public void RemoveEnemy()
+    {
+        OnEnemyRemoved?.Invoke();
+        Destroy(gameObject);
     }
 
     void LateUpdate()

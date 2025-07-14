@@ -39,57 +39,57 @@ public class StackManager : MonoBehaviour
     private List<GameObject> stackedPrefabs = new List<GameObject>();
     private List<Vector3> targetPositions = new List<Vector3>();
     private List<Vector3> velocities = new List<Vector3>();
+    private float enemyCheckTimer = 0f;
+    private float enemyCheckInterval = 0.2f;
+    private bool stackDirty = false;
 
     void Start()
     {
         UpdateCapacityBar();
         if (OnStackChanged != null)
-            OnStackChanged += _ => UpdateCapacityBar();
+            OnStackChanged += _ => { UpdateCapacityBar(); stackDirty = true; };
         else
-            OnStackChanged = _ => UpdateCapacityBar();
+            OnStackChanged = _ => { UpdateCapacityBar(); stackDirty = true; };
     }
 
     void Update()
     {
-        // Empilhamento automático de inimigos derrotados
-        Collider[] hits = Physics.OverlapSphere(stackOrigin.position, pickupRange, enemyLayer);
-        foreach (var hit in hits)
+        // Busca por inimigos só a cada 0.2s
+        enemyCheckTimer += Time.deltaTime;
+        if (enemyCheckTimer >= enemyCheckInterval)
         {
-            var stackable = hit.GetComponentInParent<StackableCharacter>();
-            var enemyController = hit.GetComponentInParent<EnemyController>();
-            if (stackable != null && enemyController != null && enemyController.IsRagdollActive() && !stackable.isStacked && stackable.canBeCollected)
+            enemyCheckTimer = 0f;
+            Collider[] hits = Physics.OverlapSphere(stackOrigin.position, pickupRange, enemyLayer);
+            foreach (var hit in hits)
             {
-                // Só tenta coletar se houver espaço
-                if (stackedPrefabs.Count < maxStack)
+                var stackable = hit.GetComponentInParent<StackableCharacter>();
+                var enemyController = hit.GetComponentInParent<EnemyController>();
+                if (stackable != null && enemyController != null && enemyController.IsRagdollActive() && !stackable.isStacked && stackable.canBeCollected)
                 {
-                    AddToStack(stackable.transform);
-                    stackable.isStacked = true;
-                    stackable.canBeCollected = false;
+                    if (stackedPrefabs.Count < maxStack)
+                    {
+                        AddToStack(stackable.transform);
+                        stackable.isStacked = true;
+                        stackable.canBeCollected = false;
+                        stackDirty = true;
+                    }
                 }
             }
         }
-        // Efeito de corrente/rabo de lagartixa com Lerp
+        // Atualiza posições da pilha a cada frame para seguir o player
         Vector3 dir = stackDirection.normalized;
         Vector3 anchor = stackOrigin.position;
-        // Primeiro objeto: fixo no anchor
         if (stackedPrefabs.Count > 0)
         {
             stackedPrefabs[0].transform.position = stackOrigin.position + dir * stackSpacing + Vector3.up * stackYOffset;
             stackedPrefabs[0].transform.rotation = Quaternion.Euler(90, 0, 0);
             stackedPrefabs[0].transform.localScale = stackedScale;
         }
-
-        // Demais objetos: seguem o anterior, topo balança mais
         for (int i = 1; i < stackedPrefabs.Count; i++)
         {
             float t = (float)i / (stackedPrefabs.Count - 1);
-            float lerp = Mathf.Lerp(lerpSpeed, lerpSpeed * 2f, t); // O topo balança mais
-
+            float lerp = Mathf.Lerp(lerpSpeed, lerpSpeed * 2f, t);
             Vector3 targetPos = stackedPrefabs[i - 1].transform.position + dir * stackSpacing + Vector3.up * stackYOffset;
-
-            // (Opcional) Para o último objeto, pode adicionar offset extra de inércia aqui
-            // if (i == stackedPrefabs.Count - 1) { ... }
-
             stackedPrefabs[i].transform.position = Vector3.Lerp(
                 stackedPrefabs[i].transform.position,
                 targetPos,
@@ -152,7 +152,11 @@ public class StackManager : MonoBehaviour
             Debug.LogWarning("[StackManager] stackedEnemyPrefab não atribuído!");
         }
         // Desativa ou destrói o inimigo original
-        enemy.gameObject.SetActive(false);
+        var enemyController = enemy.GetComponent<EnemyController>();
+        if (enemyController != null)
+            enemyController.RemoveEnemy();
+        else
+            Destroy(enemy.gameObject);
         OnStackChanged?.Invoke(stackedPrefabs.Count);
         UpdateCapacityBar();
     }
@@ -168,6 +172,7 @@ public class StackManager : MonoBehaviour
         }
         stackedPrefabs.Clear();
         money += sold * moneyPerEnemy;
+        // Removido: som de venda aqui
         OnMoneyChanged?.Invoke(money);
         OnStackChanged?.Invoke(stackedPrefabs.Count);
         UpdateCapacityBar();

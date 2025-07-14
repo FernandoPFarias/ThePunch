@@ -14,7 +14,10 @@ public class SellZone : MonoBehaviour
         if (stackManager != null)
         {
             Debug.Log("[SellZone] Venda realizada!");
+            int sold = stackManager.StackCount;
             stackManager.SellStack();
+            if (sold > 0 && MusicManager.Instance != null && MusicManager.Instance.sellClip != null)
+                MusicManager.Instance.PlaySFX(MusicManager.Instance.sellClip);
         }
     }
 } 
