@@ -14,12 +14,30 @@ public class PunchHitbox : MonoBehaviour
             hitboxCollider.isTrigger = true;
     }
 
-    public void ActivateHitbox(GameObject player = null)
+    public bool ActivateHitbox(GameObject player = null)
     {
         if (hitboxCollider != null)
             hitboxCollider.enabled = true;
         playerRef = player;
         lastEnemyHit = null;
+
+        // Checa se há inimigo válido na hitbox
+        bool acertou = false;
+        Collider[] hits = Physics.OverlapBox(hitboxCollider.bounds.center, hitboxCollider.bounds.extents, hitboxCollider.transform.rotation);
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag("Enemy"))
+            {
+                var enemy = hit.GetComponentInParent<EnemyController>();
+                if (enemy != null && !enemy.IsRagdollActive())
+                {
+                    lastEnemyHit = hit.gameObject;
+                    acertou = true;
+                    break;
+                }
+            }
+        }
+        return acertou;
     }
 
     public void DeactivateHitbox()

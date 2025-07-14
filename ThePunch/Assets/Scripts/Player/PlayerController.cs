@@ -149,7 +149,13 @@ public class PlayerController : MonoBehaviour
     public void ActivatePunchHitbox()
     {
         if (punchHitbox != null)
-            punchHitbox.ActivateHitbox(gameObject);
+        {
+            bool acertou = punchHitbox.ActivateHitbox(gameObject);
+            if (acertou)
+            {
+                PlayPunchSound();
+            }
+        }
     }
 
     public void DeactivatePunchHitbox()
@@ -158,7 +164,8 @@ public class PlayerController : MonoBehaviour
             punchHitbox.DeactivateHitbox();
     }
 
-    public void PlayPunchSound()
+    // PlayPunchSound agora só é chamado internamente
+    private void PlayPunchSound()
     {
         if (MusicManager.Instance != null && MusicManager.Instance.punchClip != null)
             MusicManager.Instance.PlaySFX(MusicManager.Instance.punchClip);
