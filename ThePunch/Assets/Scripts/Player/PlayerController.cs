@@ -126,10 +126,13 @@ public class PlayerController : MonoBehaviour
             {
                 if (animator != null)
                 {
-                    animator.SetTrigger("T_Punch");
+                    // Só soca se não estiver no estado de soco
+                    if (!animator.GetCurrentAnimatorStateInfo(0).IsName("T_Punch") && !animator.GetCurrentAnimatorStateInfo(0).IsName("Punch"))
+                    {
+                        animator.SetTrigger("T_Punch");
+                        lastPunchTime = Time.time;
+                    }
                 }
-                // Removido: som do soco aqui, agora só pelo Animation Event
-                lastPunchTime = Time.time;
             }
         }
     }
