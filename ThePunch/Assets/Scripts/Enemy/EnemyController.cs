@@ -11,6 +11,8 @@ public class EnemyController : MonoBehaviour
     public UnityEngine.AI.NavMeshAgent navMeshAgent;
     public Rigidbody rootRigidbody;
     public SimplePatrol simplePatrol;
+    private int originalLayer;
+    private const string ragdollLayerName = "RagdollDead";
 
     void Awake()
     {
@@ -31,9 +33,19 @@ public class EnemyController : MonoBehaviour
         // NÃO desative o Character Controller aqui!
         // Mantenha o Character Controller ativo até ativar o ragdoll
         // SetRagdoll(false) agora só desativa ragdollColliders
+        originalLayer = gameObject.layer;
         SetRagdoll(false);
         if (characterController != null)
             characterController.enabled = true;
+    }
+
+    private void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, newLayer);
+        }
     }
 
     public void SetRagdoll(bool active)
@@ -53,14 +65,25 @@ public class EnemyController : MonoBehaviour
                 rb.constraints = RigidbodyConstraints.None;
             }
         }
-        // Garante que os colliders do ragdoll estejam habilitados e não triggers ao ativar
+        // Garante que os colliders do ragdoll estejam habilitados e triggers ao ativar
         foreach (var col in ragdollColliders)
         {
             col.enabled = active;
-            if (active && col.isTrigger) col.isTrigger = false;
+            // Removido: alteração de isTrigger
         }
         if (animator != null)
             animator.enabled = !active;
+        // Layer logic
+        if (active)
+        {
+            int ragdollLayer = LayerMask.NameToLayer(ragdollLayerName);
+            if (ragdollLayer >= 0)
+                SetLayerRecursively(gameObject, ragdollLayer);
+        }
+        else
+        {
+            SetLayerRecursively(gameObject, originalLayer);
+        }
         // Desativa movimentação do root ao ativar ragdoll
         if (active)
         {

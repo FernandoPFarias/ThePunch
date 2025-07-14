@@ -59,8 +59,13 @@ public class StackManager : MonoBehaviour
             var enemyController = hit.GetComponentInParent<EnemyController>();
             if (stackable != null && enemyController != null && enemyController.IsRagdollActive() && !stackable.isStacked && stackable.canBeCollected)
             {
-                AddToStack(stackable.transform);
-                stackable.isStacked = true;
+                // Só tenta coletar se houver espaço
+                if (stackedPrefabs.Count < maxStack)
+                {
+                    AddToStack(stackable.transform);
+                    stackable.isStacked = true;
+                    stackable.canBeCollected = false;
+                }
             }
         }
         // Efeito de corrente/rabo de lagartixa com Lerp

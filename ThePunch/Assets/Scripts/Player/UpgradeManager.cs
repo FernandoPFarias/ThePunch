@@ -1,25 +1,31 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class PlayerUpgradeLevel
+{
+    public int capacity;
+    public Material skinMaterial;
+    public int upgradeCost;
+}
 
 public class UpgradeManager : MonoBehaviour
 {
     public StackManager stackManager;
     public PlayerSkinChanger skinChanger;
-    public CapacityBarUI capacityBarUI; // Adicionado para integração
-    public int capacityUpgradeCost = 50;
-    public int colorUpgradeCost = 30;
-    public Button capacityButton;
-    public Button colorButton;
-    public TMPro.TMP_Text capacityCostText;
-    public TMPro.TMP_Text colorCostText;
+    public CapacityBarUI capacityBarUI;
+    public Button upgradeButton;
+    public TMPro.TMP_Text upgradeCostText;
     public TMPro.TMP_Text stackInfoText;
+    public List<PlayerUpgradeLevel> upgradeLevels;
+    public Animator upgradeButtonAnimator;
+    private int currentLevel = 0;
 
     void Start()
     {
-        if (capacityButton != null)
-            capacityButton.onClick.AddListener(UpgradeCapacity);
-        if (colorButton != null)
-            colorButton.onClick.AddListener(UpgradeColor);
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(UpgradePlayer);
         UpdateUI();
         if (stackManager != null)
             stackManager.OnMoneyChanged += _ => UpdateUI();
@@ -29,47 +35,51 @@ public class UpgradeManager : MonoBehaviour
 
     void OnDestroy()
     {
-        if (capacityButton != null)
-            capacityButton.onClick.RemoveListener(UpgradeCapacity);
-        if (colorButton != null)
-            colorButton.onClick.RemoveListener(UpgradeColor);
+        if (upgradeButton != null)
+            upgradeButton.onClick.RemoveListener(UpgradePlayer);
         if (stackManager != null)
             stackManager.OnMoneyChanged -= _ => UpdateUI();
         if (stackManager != null)
             stackManager.OnStackChanged -= _ => UpdateUI();
     }
 
-    void UpgradeCapacity()
+    void UpgradePlayer()
     {
-        if (stackManager.money >= capacityUpgradeCost)
+        if (upgradeButtonAnimator != null)
+            upgradeButtonAnimator.SetTrigger("T_isPressed");
+        if (currentLevel >= upgradeLevels.Count)
+            return;
+        var level = upgradeLevels[currentLevel];
+        if (stackManager.money >= level.upgradeCost)
         {
-            stackManager.money -= capacityUpgradeCost;
-            stackManager.maxStack++;
+            stackManager.money -= level.upgradeCost;
+            ApplyUpgrade(level);
+            currentLevel++;
             stackManager.OnMoneyChanged?.Invoke(stackManager.money);
             UpdateUI();
-            stackManager.UpdateCapacityBar(); // Garante atualização imediata da UI
+            stackManager.UpdateCapacityBar();
         }
     }
 
-    void UpgradeColor()
+    void ApplyUpgrade(PlayerUpgradeLevel level)
     {
-        if (stackManager.money >= colorUpgradeCost && skinChanger != null)
-        {
-            stackManager.money -= colorUpgradeCost;
-            skinChanger.NextMaterial();
-            stackManager.OnMoneyChanged?.Invoke(stackManager.money);
-            UpdateUI();
-        }
+        if (stackManager != null)
+            stackManager.maxStack = level.capacity;
+        if (skinChanger != null && level.skinMaterial != null)
+            skinChanger.SetMaterial(level.skinMaterial);
     }
 
     void UpdateUI()
     {
-        if (capacityCostText != null)
-            capacityCostText.text = " " + capacityUpgradeCost;
-        if (colorCostText != null)
-            colorCostText.text = " " + colorUpgradeCost;
+        if (upgradeCostText != null)
+        {
+            if (currentLevel < upgradeLevels.Count)
+                upgradeCostText.text = " " + upgradeLevels[currentLevel].upgradeCost;
+            else
+                upgradeCostText.text = "Max";
+        }
         if (stackInfoText != null && stackManager != null)
-            stackInfoText.text = $"Capacidade: {stackManager.StackCount}/{stackManager.maxStack}";
+            stackInfoText.text = $"{stackManager.StackCount}/{stackManager.maxStack}";
         if (capacityBarUI != null && stackManager != null)
             capacityBarUI.SetCapacity(stackManager.maxStack, stackManager.maxPossibleCapacity);
     }

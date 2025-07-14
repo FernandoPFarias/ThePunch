@@ -167,10 +167,10 @@ TextureImporter:
       name: Steampunk_UI_Buttons_4_0
       rect:
         serializedVersion: 2
-        x: 92
-        y: 774
-        width: 723
-        height: 259
+        x: 94
+        y: 776
+        width: 716
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -189,10 +189,10 @@ TextureImporter:
       name: Steampunk_UI_Buttons_4_1
       rect:
         serializedVersion: 2
-        x: 98
-        y: 432
-        width: 729
-        height: 278
+        x: 924
+        y: 784
+        width: 720
+        height: 257
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -211,10 +211,10 @@ TextureImporter:
       name: Steampunk_UI_Buttons_4_2
       rect:
         serializedVersion: 2
-        x: 98
-        y: 451
-        width: 723
-        height: 259
+        x: 100
+        y: 452
+        width: 720
+        height: 254
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -230,35 +230,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Steampunk_UI_Buttons_4_6
-      rect:
-        serializedVersion: 2
-        x: 895
-        y: 762
-        width: 785
-        height: 303
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 1d4dd268e0bdaeb90800000000000000
-      internalID: -7211710997853252399
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: Steampunk_UI_Buttons_4_3
       rect:
         serializedVersion: 2
-        x: 66
-        y: 52
-        width: 729
-        height: 311
+        x: 911
+        y: 399
+        width: 192
+        height: 308
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -277,10 +255,10 @@ TextureImporter:
       name: Steampunk_UI_Buttons_4_4
       rect:
         serializedVersion: 2
-        x: 1096
-        y: 50
-        width: 711
-        height: 287
+        x: 1165
+        y: 403
+        width: 703
+        height: 281
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -299,10 +277,10 @@ TextureImporter:
       name: Steampunk_UI_Buttons_4_5
       rect:
         serializedVersion: 2
-        x: 1156
-        y: 395
-        width: 727
-        height: 293
+        x: 68
+        y: 66
+        width: 702
+        height: 282
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -311,8 +289,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 26382891dca4d21f0800000000000000
+      spriteID: c67304110935e694fb8ae79185a25482
       internalID: -1068115291860204702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Steampunk_UI_Buttons_4_7
+      rect:
+        serializedVersion: 2
+        x: 1098
+        y: 55
+        width: 702
+        height: 281
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5f0885cc4a3588c4b803f9c25834114a
+      internalID: -596362624
       vertices: []
       indices: 
       edges: []
@@ -339,7 +339,6 @@ TextureImporter:
       Steampunk_UI_Buttons_4_5: -1068115291860204702
       Steampunk_UI_Buttons_4_6: -7211710997853252399
       Steampunk_UI_Buttons_4_7: -596362624
-      Steampunk_UI_Buttons_4_8: -79738646
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

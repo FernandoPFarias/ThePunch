@@ -19,6 +19,24 @@ public class PlayerSkinChanger : MonoBehaviour
         ApplyMaterial();
     }
 
+    public void SetMaterial(Material mat)
+    {
+        if (playerRenderers == null || mat == null) return;
+        foreach (var rend in playerRenderers)
+        {
+            if (rend != null)
+            {
+                // Se o renderer tem múltiplos materiais, substitui todos
+                var mats = rend.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    mats[i] = mat;
+                }
+                rend.materials = mats;
+            }
+        }
+    }
+
     private void ApplyMaterial()
     {
         if (playerRenderers == null) return;
