@@ -177,4 +177,4 @@ public class StackManager : MonoBehaviour
         OnStackChanged?.Invoke(stackedPrefabs.Count);
         UpdateCapacityBar();
     }
-} 
+}

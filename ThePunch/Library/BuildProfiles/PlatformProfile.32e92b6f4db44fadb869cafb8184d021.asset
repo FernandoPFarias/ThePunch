@@ -9,15 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 15003, guid: 0000000000000000e000000000000000, type: 0}
+  m_Script: {fileID: 0}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: UnityEditor.CoreModule:UnityEditor.Build.Profile:BuildProfile
   m_AssetVersion: 1
   m_BuildTarget: 21
   m_Subtarget: 0
   m_PlatformId: 32e92b6f4db44fadb869cafb8184d021
   m_PlatformBuildProfile:
-    rid: 8727577240336072704
+    rid: 8727577294598045700
   m_OverrideGlobalSceneList: 0
   m_Scenes: []
   m_ScriptingDefines: []
@@ -26,7 +26,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 8727577240336072704
+    - rid: 8727577294598045700
       type: {class: UWPPlatformSettings, ns: UnityEditor.UWP, asm: UnityEditor.UWP.Extensions}
       data:
         m_Development: 0
