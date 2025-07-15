@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ public class StackManager : MonoBehaviour
 
     [Header("Empilhamento com Prefab")]
     public GameObject stackedEnemyPrefab; // Prefab a ser instanciado na pilha
+    public StackPool stackPool; // Pool para os visuais da pilha
 
     [Header("Ajustes Visuais da Pilha")]
     public float stackYOffset = 0f; // Offset vertical para ajustar altura dos empilhados
@@ -39,26 +41,28 @@ public class StackManager : MonoBehaviour
     private List<GameObject> stackedPrefabs = new List<GameObject>();
     private List<Vector3> targetPositions = new List<Vector3>();
     private List<Vector3> velocities = new List<Vector3>();
-    private float enemyCheckTimer = 0f;
     private float enemyCheckInterval = 0.2f;
-    private bool stackDirty = false;
+    private Vector3 lastStackOriginPosition;
 
     void Start()
     {
         UpdateCapacityBar();
         if (OnStackChanged != null)
-            OnStackChanged += _ => { UpdateCapacityBar(); stackDirty = true; };
+            OnStackChanged += _ => { UpdateCapacityBar(); };
         else
-            OnStackChanged = _ => { UpdateCapacityBar(); stackDirty = true; };
+            OnStackChanged = _ => { UpdateCapacityBar(); };
+        StartCoroutine(CheckEnemiesRoutine());
+        lastStackOriginPosition = stackOrigin.position;
+        // Inicializa velocities para SmoothDamp
+        velocities = new List<Vector3>();
+        for (int i = 0; i < 32; i++) // Suporta até 32 inimigos empilhados
+            velocities.Add(Vector3.zero);
     }
 
-    void Update()
+    private IEnumerator CheckEnemiesRoutine()
     {
-        // Busca por inimigos só a cada 0.2s
-        enemyCheckTimer += Time.deltaTime;
-        if (enemyCheckTimer >= enemyCheckInterval)
+        while (true)
         {
-            enemyCheckTimer = 0f;
             Collider[] hits = Physics.OverlapSphere(stackOrigin.position, pickupRange, enemyLayer);
             foreach (var hit in hits)
             {
@@ -71,12 +75,15 @@ public class StackManager : MonoBehaviour
                         AddToStack(stackable.transform);
                         stackable.isStacked = true;
                         stackable.canBeCollected = false;
-                        stackDirty = true;
                     }
                 }
             }
+            yield return new WaitForSeconds(enemyCheckInterval);
         }
-        // Atualiza posições da pilha a cada frame para seguir o player
+    }
+
+    void Update()
+    {
         Vector3 dir = stackDirection.normalized;
         Vector3 anchor = stackOrigin.position;
         if (stackedPrefabs.Count > 0)
@@ -88,16 +95,20 @@ public class StackManager : MonoBehaviour
         for (int i = 1; i < stackedPrefabs.Count; i++)
         {
             float t = (float)i / (stackedPrefabs.Count - 1);
-            float lerp = Mathf.Lerp(lerpSpeed, lerpSpeed * 2f, t);
+            float smooth = 1f / Mathf.Lerp(lerpSpeed, lerpSpeed * 2f, t); // Quanto maior lerpSpeed, mais rápido
             Vector3 targetPos = stackedPrefabs[i - 1].transform.position + dir * stackSpacing + Vector3.up * stackYOffset;
-            stackedPrefabs[i].transform.position = Vector3.Lerp(
+            Vector3 vel = velocities[i];
+            stackedPrefabs[i].transform.position = Vector3.SmoothDamp(
                 stackedPrefabs[i].transform.position,
                 targetPos,
-                Time.deltaTime * lerp
+                ref vel,
+                smooth
             );
+            velocities[i] = vel;
             stackedPrefabs[i].transform.rotation = Quaternion.Euler(90, 0, 0);
             stackedPrefabs[i].transform.localScale = stackedScale;
         }
+        // stackDirty agora só para UI/capacidade
     }
 
     void OnDrawGizmosSelected()
@@ -126,37 +137,47 @@ public class StackManager : MonoBehaviour
     {
         if (stackedPrefabs.Count >= maxStack)
             return;
-        // Instancia o prefab na posição da pilha
-        if (stackedEnemyPrefab != null)
+        // Usa o pool para pegar o visual da pilha
+        GameObject stacked = null;
+        if (stackPool != null)
         {
-            GameObject stacked = Instantiate(stackedEnemyPrefab);
-            // Zera transformações herdadas do prefab
-            stacked.transform.position = Vector3.zero;
-            stacked.transform.rotation = Quaternion.identity;
-            stacked.transform.localScale = Vector3.one;
-            // Agora aplica os valores desejados
-            Vector3 spawnPos = stackOrigin.position + stackDirection.normalized * stackSpacing * stackedPrefabs.Count + Vector3.up * stackYOffset;
-            Quaternion spawnRot = Quaternion.LookRotation(stackDirection.normalized);
-            stacked.transform.position = spawnPos;
-            stacked.transform.rotation = spawnRot;
-            stacked.transform.localScale = stackedScale;
-            // Desativa física e colisão real
-            var rb = stacked.GetComponent<Rigidbody>();
-            if (rb != null) rb.isKinematic = true;
-            var colliders = stacked.GetComponentsInChildren<Collider>();
-            foreach (var col in colliders) col.isTrigger = true;
-            stackedPrefabs.Add(stacked);
+            stacked = stackPool.GetStackedEnemy();
+        }
+        else if (stackedEnemyPrefab != null)
+        {
+            stacked = Instantiate(stackedEnemyPrefab);
         }
         else
         {
             Debug.LogWarning("[StackManager] stackedEnemyPrefab não atribuído!");
         }
+        if (stacked != null)
+        {
+            stacked.transform.position = Vector3.zero;
+            stacked.transform.rotation = Quaternion.identity;
+            stacked.transform.localScale = Vector3.one;
+            Vector3 spawnPos = stackOrigin.position + stackDirection.normalized * stackSpacing * stackedPrefabs.Count + Vector3.up * stackYOffset;
+            Quaternion spawnRot = Quaternion.LookRotation(stackDirection.normalized);
+            stacked.transform.position = spawnPos;
+            stacked.transform.rotation = spawnRot;
+            stacked.transform.localScale = stackedScale;
+            var rb = stacked.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
+            var colliders = stacked.GetComponentsInChildren<Collider>();
+            foreach (var col in colliders) col.isTrigger = true;
+            stackedPrefabs.Add(stacked);
+            // Garante que velocities tenha tamanho suficiente
+            while (velocities.Count < stackedPrefabs.Count)
+                velocities.Add(Vector3.zero);
+        }
         // Desativa ou destrói o inimigo original
         var enemyController = enemy.GetComponent<EnemyController>();
-        if (enemyController != null)
+        if (enemyController != null) {
+            enemyController.DisablePhysicsAndColliders();
             enemyController.RemoveEnemy();
-        else
+        } else {
             Destroy(enemy.gameObject);
+        }
         OnStackChanged?.Invoke(stackedPrefabs.Count);
         UpdateCapacityBar();
     }
@@ -168,9 +189,14 @@ public class StackManager : MonoBehaviour
         int sold = stackedPrefabs.Count;
         foreach (var obj in stackedPrefabs)
         {
-            Destroy(obj);
+            if (stackPool != null)
+                stackPool.ReturnStackedEnemy(obj);
+            else
+                Destroy(obj);
         }
         stackedPrefabs.Clear();
+        // Limpa velocities para evitar lixo
+        velocities.Clear();
         money += sold * moneyPerEnemy;
         // Removido: som de venda aqui
         OnMoneyChanged?.Invoke(money);

@@ -1,14 +1,20 @@
+// ===============================
+// PunchHitbox.cs
+// Controla a hitbox do soco do jogador, ativando/desativando colisão e aplicando ragdoll nos inimigos atingidos.
+// ===============================
 using UnityEngine;
 
 public class PunchHitbox : MonoBehaviour
 {
-    public Collider hitboxCollider; // Arraste o collider trigger aqui
-    public Color gizmoColor = new Color(1, 0, 0, 0.3f);
+    [Header("Configuração da Hitbox")]
+    [Tooltip("Collider trigger usado como hitbox do soco")] public Collider hitboxCollider; // Arraste o collider trigger aqui
+    [Tooltip("Cor do gizmo para visualização no editor")] public Color gizmoColor = new Color(1, 0, 0, 0.3f);
     private GameObject lastEnemyHit;
     private GameObject playerRef;
 
     void Reset()
     {
+        // Inicializa o collider como trigger
         hitboxCollider = GetComponent<Collider>();
         if (hitboxCollider != null)
             hitboxCollider.isTrigger = true;
@@ -16,6 +22,7 @@ public class PunchHitbox : MonoBehaviour
 
     public bool ActivateHitbox(GameObject player = null)
     {
+        // Ativa a hitbox e verifica se acertou algum inimigo
         if (hitboxCollider != null)
             hitboxCollider.enabled = true;
         playerRef = player;
@@ -42,6 +49,7 @@ public class PunchHitbox : MonoBehaviour
 
     public void DeactivateHitbox()
     {
+        // Desativa a hitbox e aplica ragdoll no inimigo atingido
         if (hitboxCollider != null)
             hitboxCollider.enabled = false;
         // Ativa ragdoll do inimigo atingido, se houver
@@ -59,6 +67,7 @@ public class PunchHitbox : MonoBehaviour
 
     void OnDrawGizmos()
     {
+        // Desenha o gizmo da hitbox no editor
         if (hitboxCollider != null && !Application.isPlaying)
         {
             Gizmos.color = gizmoColor;
@@ -77,6 +86,7 @@ public class PunchHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Marca o inimigo atingido ao entrar na hitbox
         if (other.CompareTag("Enemy") && lastEnemyHit == null)
         {
             lastEnemyHit = other.gameObject;

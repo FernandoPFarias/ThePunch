@@ -1,16 +1,22 @@
+// ===============================
+// VirtualJoystick.cs
+// Implementa um joystick virtual para controle em dispositivos móveis.
+// ===============================
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
 {
-    public Image joystickBG;
-    public Image joystickHandle;
+    [Header("Referências de UI")]
+    [Tooltip("Imagem de fundo do joystick")] public Image joystickBG;
+    [Tooltip("Imagem do handle do joystick")] public Image joystickHandle;
     [HideInInspector]
     public Vector2 inputDirection = Vector2.zero;
 
     private void Start()
     {
+        // Inicializa referências do joystick
         if (joystickBG == null)
             joystickBG = GetComponent<Image>();
         if (joystickHandle == null && transform.childCount > 0)
@@ -19,6 +25,7 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerUpHandler, I
 
     public void OnDrag(PointerEventData ped)
     {
+        // Atualiza a direção do input e move o handle
         Vector2 pos;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             joystickBG.rectTransform,
@@ -41,16 +48,18 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerUpHandler, I
 
     public void OnPointerDown(PointerEventData ped)
     {
+        // Chama OnDrag ao pressionar
         OnDrag(ped);
     }
 
     public void OnPointerUp(PointerEventData ped)
     {
+        // Reseta o input e handle ao soltar
         inputDirection = Vector2.zero;
         joystickHandle.rectTransform.anchoredPosition = Vector2.zero;
     }
 
-    // Método para acessar o valor do joystick
+    // Métodos para acessar valores do joystick
     public float Horizontal() { return inputDirection.x; }
     public float Vertical() { return inputDirection.y; }
     public Vector2 Direction() { return inputDirection; }

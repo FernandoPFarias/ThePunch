@@ -1,23 +1,38 @@
+// ===============================
+// EnemySpawner.cs
+// Responsável por spawnar inimigos em uma área definida, usando pooling se disponível.
+// Exponha os campos necessários no Inspector com headers e tooltips para facilitar a configuração.
+// ===============================
 using UnityEngine;
+using System.Collections;
 
 public class EnemySpawner : MonoBehaviour
 {
-    public GameObject enemyPrefab;
-    public Vector3 areaCenter;
-    public Vector3 areaSize = new Vector3(10, 0, 10);
-    public float spawnInterval = 3f;
-    public int maxEnemies = 10;
+    [Header("Configuração de Spawn")]
+    [Tooltip("Prefab do inimigo a ser spawnado")] public GameObject enemyPrefab;
+    [Tooltip("Centro da área de spawn")] public Vector3 areaCenter;
+    [Tooltip("Tamanho da área de spawn")] public Vector3 areaSize = new Vector3(10, 0, 10);
+    [Tooltip("Intervalo entre spawns (segundos)")] public float spawnInterval = 3f;
+    [Tooltip("Número máximo de inimigos na área")] public int maxEnemies = 10;
+    [Header("Pooling")]
+    [Tooltip("Pool de inimigos para reaproveitamento")] public EnemyPool enemyPool;
 
-    private float timer = 0f;
     private int currentEnemies = 0;
 
-    void Update()
+    void Start()
     {
-        timer += Time.deltaTime;
-        if (timer >= spawnInterval && currentEnemies < maxEnemies)
+        StartCoroutine(SpawnRoutine());
+    }
+
+    private IEnumerator SpawnRoutine()
+    {
+        while (true)
         {
-            SpawnEnemy();
-            timer = 0f;
+            if (currentEnemies < maxEnemies)
+            {
+                SpawnEnemy();
+            }
+            yield return new WaitForSeconds(spawnInterval);
         }
     }
 
@@ -28,7 +43,9 @@ public class EnemySpawner : MonoBehaviour
             0,
             Random.Range(-areaSize.z / 2, areaSize.z / 2)
         );
-        GameObject enemy = Instantiate(enemyPrefab, randomPos, Quaternion.identity);
+        GameObject enemy = enemyPool != null ? enemyPool.GetEnemy() : Instantiate(enemyPrefab);
+        enemy.transform.position = randomPos;
+        enemy.transform.rotation = Quaternion.identity;
         currentEnemies++;
         var controller = enemy.GetComponent<EnemyController>();
         if (controller != null)
@@ -38,6 +55,7 @@ public class EnemySpawner : MonoBehaviour
     void OnEnemyRemoved()
     {
         currentEnemies--;
+        Debug.Log($"[EnemySpawner] OnEnemyRemoved chamado. currentEnemies: {currentEnemies}");
     }
 
     void OnDrawGizmosSelected()

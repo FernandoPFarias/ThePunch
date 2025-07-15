@@ -1,19 +1,27 @@
+// ===============================
+// EnemyController.cs
+// Responsável por controlar o inimigo, ativar/desativar ragdoll, pooling, colisão e eventos de remoção.
+// Exponha os campos necessários no Inspector com headers e tooltips para facilitar a configuração.
+// ===============================
 using System.Collections;
 using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    public Rigidbody[] ragdollBodies;
-    public Animator animator;
-    public Collider[] ragdollColliders;
-    public Transform hips; // arraste o osso principal do ragdoll aqui
-    public CharacterController characterController;
-    public UnityEngine.AI.NavMeshAgent navMeshAgent;
-    public Rigidbody rootRigidbody;
-    public SimplePatrol simplePatrol;
+    [Header("Referências de Componentes")]
+    [Tooltip("Rigidbodies do ragdoll do inimigo")] public Rigidbody[] ragdollBodies;
+    [Tooltip("Animator do inimigo")] public Animator animator;
+    [Tooltip("Colliders do ragdoll do inimigo")] public Collider[] ragdollColliders;
+    [Tooltip("Transform do osso principal do ragdoll (hips)")] public Transform hips;
+    [Tooltip("CharacterController do inimigo")] public CharacterController characterController;
+    [Tooltip("NavMeshAgent do inimigo")] public UnityEngine.AI.NavMeshAgent navMeshAgent;
+    [Tooltip("Rigidbody raiz do inimigo")] public Rigidbody rootRigidbody;
+    [Tooltip("Script de patrulha simples (opcional)")] public SimplePatrol simplePatrol;
     private int originalLayer;
     private const string ragdollLayerName = "RagdollDead";
     public System.Action OnEnemyRemoved;
+    [Header("Pooling e Eventos")]
+    [Tooltip("Pool de inimigos para reaproveitamento")] public EnemyPool enemyPool;
 
     void Awake()
     {
@@ -160,8 +168,33 @@ public class EnemyController : MonoBehaviour
 
     public void RemoveEnemy()
     {
+        Debug.Log($"[EnemyController] RemoveEnemy chamado para {gameObject.name}. Pool: {(enemyPool != null)}");
         OnEnemyRemoved?.Invoke();
-        Destroy(gameObject);
+        if (enemyPool != null)
+            enemyPool.ReturnEnemy(gameObject);
+        else
+            Destroy(gameObject);
+    }
+
+    public void DisablePhysicsAndColliders()
+    {
+        // Desativa todos os rigidbodies e colliders do inimigo
+        if (ragdollBodies != null)
+        {
+            foreach (var rb in ragdollBodies)
+            {
+                if (rb != null) rb.isKinematic = true;
+            }
+        }
+        if (ragdollColliders != null)
+        {
+            foreach (var col in ragdollColliders)
+            {
+                if (col != null) col.enabled = false;
+            }
+        }
+        if (characterController != null) characterController.enabled = false;
+        if (navMeshAgent != null) navMeshAgent.enabled = false;
     }
 
     void LateUpdate()
