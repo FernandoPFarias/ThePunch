@@ -11,7 +11,7 @@ Jogo mobile onde o player derruba inimigos, empilha-os nas costas e vende para g
 3. Abra a cena principal em `Assets/Scenes/SampleScene.unity`.
 4. Dê Play no editor ou faça build para Android/iOS.
 
-**Build jogável:** [Link para a build jogável do game]([COLE_O_LINK_AQUI](https://fernando-farias.itch.io/the-punch))
+**Build jogável:** [https://fernando-farias.itch.io/the-punch]
 
 ---
 
